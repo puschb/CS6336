@@ -29,3 +29,16 @@ def k_partition(X, y, k=10, i=0):
         ]
     )
     return test_X, test_y, val_X, val_y
+
+
+def k_cross_val(func, k, X, y):
+    acc = []
+
+    # for every fold
+    for i in range(k):
+        tx, ty, vx, vy = k_partition(X, y, k=k, i=i)
+        clf = func(tx, ty)
+        a = clf.score(vx, vy)
+        acc.append(a)
+
+    return acc
