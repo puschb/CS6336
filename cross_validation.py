@@ -32,6 +32,11 @@ def k_partition(X, y, k=10, i=0):
 
 
 def k_cross_val(func, k, X, y):
+    """
+    takes a callable (must return a classifier), k, X, and y
+    runs k-fold cross validation on the classifier
+    returns the accuracy of the model with the i'th fold used for the validation set
+    """
     acc = []
 
     # for every fold
