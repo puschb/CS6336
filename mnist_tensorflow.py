@@ -1,17 +1,20 @@
-import tensorflow as tf
-import numpy as np
-from password_data import get_password_data
-
 import os
-import time
+
+os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
+
+import tensorflow as tf
+tf.get_logger().setLevel("ERROR")
+tf.autograph.set_verbosity(1)
+import numpy as np
 
 if __name__ == "__main__":
-    os.environ["CUDA_VISIBLE_DEVICES"] = "0"
     mnist = tf.keras.datasets.mnist
 
     (x_train, y_train), (x_test, y_test) = mnist.load_data()
     x_train, x_test = x_train / 255.0, x_test / 255.0
 
+    # create sequential model
     model = tf.keras.models.Sequential()
     model.add(tf.keras.Input(shape=(28, 28)))
 
