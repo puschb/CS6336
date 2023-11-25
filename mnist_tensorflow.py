@@ -4,9 +4,10 @@ os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
 import tensorflow as tf
+from tensorflow.keras import layers
+
 tf.get_logger().setLevel("ERROR")
 tf.autograph.set_verbosity(1)
-import numpy as np
 
 if __name__ == "__main__":
     mnist = tf.keras.datasets.mnist
@@ -16,12 +17,20 @@ if __name__ == "__main__":
 
     # create sequential model
     model = tf.keras.models.Sequential()
-    model.add(tf.keras.Input(shape=(28, 28)))
+    model.add(tf.keras.Input(shape=(28, 28, 1)))
 
-    # add rnn layers
-    model.add(tf.keras.layers.GRU(128, return_sequences=True, activation="relu"))
-    model.add(tf.keras.layers.GRU(256, return_sequences=True, activation="relu"))
-    model.add(tf.keras.layers.SimpleRNN(128, return_sequences=False, activation="relu"))
+    # add convolution layers
+    model.add(layers.Conv2D(32, (3, 3), activation="sigmoid"))
+    model.add(layers.MaxPooling2D((2, 2)))
+    model.add(layers.Conv2D(64, (3, 3), activation="sigmoid"))
+
+    # end of pipeline
+    model.add(layers.Flatten())
+
+    # # add rnn layers
+    # model.add(layers.SimpleRNN(128, return_sequences=True, activation="sigmoid"))
+    # model.add(layers.SimpleRNN(256, return_sequences=False, activation="sigmoid"))
+    # # model.add(layers.GRU(128, return_sequences=False, activation="relu"))
 
     # add dense layer with number of possibilities
     model.add(tf.keras.layers.Dense(10))

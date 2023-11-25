@@ -1,6 +1,8 @@
 import hashlib
 import csv
 import numpy as np
+import pandas as pd
+import tensorflow as tf
 
 
 def load_password_list():
@@ -41,13 +43,9 @@ def get_password_data():
 
 
 def parse_password_data():
-    dataset = get_password_data()
-    x = dataset[:, 0]
-    y = dataset[:, 1]
-    x_set = []
-    for item in x:
-        x_set.append([ord(c) for c in item])
-    y_set = [[int(s[i : i + 1], 16) for i in range(0, len(s), 2)] for s in y]
+    password_dataset = pd.read_csv("data/password_data/p_data.csv")
+    hashes = password_dataset[]
+
     return x_set, y_set
 
 
