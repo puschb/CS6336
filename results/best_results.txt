@@ -1,0 +1,15 @@
+Collecting the classifiers with the highest "mean test accuracy" on each dataset:
+=================================================================================
+Logistic Regression:
+
+
+SVM:
+
+
+k-Nearest Neighbors:
+
+
+Decision Tree:
+
+
+Random Forest:
