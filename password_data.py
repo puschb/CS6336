@@ -1,5 +1,6 @@
 import hashlib
 import csv
+import numpy as np
 
 
 def load_password_list():
@@ -36,8 +37,19 @@ def get_password_data():
         for row in reader:
             dataset.append(row)
 
-    return dataset
+    return np.asarray(dataset)
+
+
+def parse_password_data():
+    dataset = get_password_data()
+    x = dataset[:, 0]
+    y = dataset[:, 1]
+    x_set = []
+    for item in x:
+        x_set.append([ord(c) for c in item])
+    y_set = [[int(s[i : i + 1], 16) for i in range(0, len(s), 2)] for s in y]
+    return x_set, y_set
 
 
 if __name__ == "__main__":
-    print(get_password_data())
+    parse_password_data()
