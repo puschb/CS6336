@@ -2,12 +2,12 @@ import hashlib
 import csv
 import numpy as np
 import pandas as pd
-import tensorflow as tf
+from sklearn.preprocessing import normalize
 
 
 def load_password_list():
     passwords = []
-    for i in range(1, 4):
+    for i in range(1, 11):
         with open(f"data/password_data/passwords_{i}.csv", "r") as f:
             reader = csv.reader(f, delimiter=",")
             for row in reader:
@@ -43,11 +43,19 @@ def get_password_data():
 
 
 def parse_password_data():
-    password_dataset = pd.read_csv("data/password_data/p_data.csv")
-    hashes = password_dataset[]
+    password_dataset = get_password_data()
 
-    return x_set, y_set
+    # convert hashes to ascii
+    hashes = [[ord(c) for c in s] for s in password_dataset[:, 1]]
+
+    # pad each password in the dataset to 23 characters
+    password = [
+        [ord(s[c]) if c < len(s) else ord(" ") for c in range(24)]
+        for s in password_dataset[:, 0]
+    ]
+
+    return np.array(password, dtype="int32"), np.array(hashes, dtype="int32")
 
 
 if __name__ == "__main__":
-    parse_password_data()
+    write_hashed_data()
