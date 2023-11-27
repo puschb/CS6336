@@ -42,19 +42,27 @@ def get_password_data():
     return np.asarray(dataset)
 
 
+def str_arr_to_bin_arr(dataset, standard_length=24):
+    dataset = [
+        [ord(s[c]) if c < len(s) else ord(" ") for c in range(standard_length)]
+        for s in dataset
+    ]
+
+    return np.reshape(
+        np.array(
+            [[list(bin(c)[2:].zfill(8)) for c in d] for d in dataset], dtype="int8"
+        ),
+        (-1, standard_length * 8),
+    )
+
+
 def parse_password_data():
     password_dataset = get_password_data()
 
-    # convert hashes to ascii
-    hashes = [[ord(c) for c in s] for s in password_dataset[:, 1]]
+    password = str_arr_to_bin_arr(password_dataset[:, 0])
+    hashes = str_arr_to_bin_arr(password_dataset[:, 1], standard_length=32)
 
-    # pad each password in the dataset to 23 characters
-    password = [
-        [ord(s[c]) if c < len(s) else ord(" ") for c in range(24)]
-        for s in password_dataset[:, 0]
-    ]
-
-    return np.array(password, dtype="int32"), np.array(hashes, dtype="int32")
+    return np.array(password, dtype="int8"), np.array(hashes, dtype="int8")
 
 
 if __name__ == "__main__":
