@@ -22,18 +22,27 @@ if __name__ == "__main__":
     plen, hlen = len(pword[0]), len(hash[0])
 
     model = tf.keras.Sequential()
-    model.add(
-        layers.LSTM(
-            128, activation="relu", input_shape=(plen, 1), return_sequences=True
-        )
+    model.add(layers.Input(shape=(192, 1)))
+    model.add(layers.Dense(512, activation="relu"))
+    model.add(layers.Dense(1024, activation="relu"))
+    model.add(layers.Dense(512, activation="relu"))
+    model.add(layers.Dense(hlen))
+
+    loss = tf.keras.losses.BinaryCrossentropy(from_logits=True)
+
+    # save model at each epoch
+    model_save = tf.keras.callbacks.ModelCheckpoint(
+        "models/checkpoint/",
+        save_weights_only=True,
+        monitor="val_loss",
+        save_freq="epoch",
+        mode="min",
+        save_best_only=True,
     )
-    model.add(layers.LSTM(256, activation="relu", return_sequences=True))
-    model.add(layers.LSTM(128, activation="relu", return_sequences=False))
-    model.add(layers.Dense(32))
 
-    model.compile(optimizer="adam", loss="mse")
+    model.compile(optimizer="adam", loss=loss)
 
-    model.fit(pword, hash, batch_size=64, epochs=5, verbose=2)
+    model.fit(pword, hash, batch_size=64, epochs=5, verbose=2, callbacks=[model_save])
     model.evaluate(pword, hash, batch_size=64, verbose=2)
 
     predictions = model.predict(pword)
