@@ -1,0 +1,1 @@
+{"EPOCHS": 20, "OPTIMIZER": "adam", "NUM_FILTERS": [32, 64], "WEIGHT_INIT": "normal", "BATCH_SIZE": 8, "LEARNING_RATE": 0.001}

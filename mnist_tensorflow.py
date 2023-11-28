@@ -41,5 +41,5 @@ if __name__ == "__main__":
 
     model.compile(loss=loss, optimizer=optim, metrics=metrics)
 
-    model.fit(x_train, y_train, batch_size=64, epochs=5, verbose=2)
+    model.fit(x_train, y_train, batch_size=64, epochs=10, verbose=2)
     model.evaluate(x_test, y_test, batch_size=64, verbose=2)
