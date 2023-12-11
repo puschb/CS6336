@@ -1,0 +1,11 @@
+,name,index,params,mean_test_accuracy,mean_test_precision,mean_test_recall,mean_test_f1,mean_test_roc_auc
+0,decision_tree_grid_search_data_set1.csv,548,"{'max_depth': 5, 'max_features': 'sqrt', 'max_leaf_nodes': 20, 'min_samples_leaf': 2, 'min_samples_split': 6}",0.9383574879227052,0.9274302413273002,0.9029411764705882,0.913508053894022,0.9385259707331208
+1,decision_tree_grid_search_data_set2.csv,0,"{'max_depth': 5, 'max_features': None, 'max_leaf_nodes': 5, 'min_samples_leaf': 1, 'min_samples_split': 2}",0.7020270270270271,0.6164912280701754,0.4626373626373626,0.5130048386226876,0.6990384615384615
+2,k_neighbor_grid_search_data_set1.csv,57,"{'n_neighbors': 4, 'p': 1, 'weights': 'distance'}",0.9779710144927536,1.0,0.9397058823529412,0.968058153840968,0.9756519849319036
+3,k_neighbor_grid_search_data_set2.csv,231,"{'n_neighbors': 16, 'p': 4, 'weights': 'distance'}",0.7073573573573573,0.6897008547008547,0.4104395604395605,0.4879562924076318,0.7152084328714763
+4,logistic_regression_grid_search_data_set1.csv,120,"{'C': 1.0, 'penalty': 'l2', 'solver': 'lbfgs'}",0.9779710144927536,0.9882352941176472,0.9518382352941176,0.9684319103817074,0.992782889017676
+5,logistic_regression_grid_search_data_set2.csv,96,"{'C': 0.1, 'penalty': 'l2', 'solver': 'lbfgs'}",0.7263513513513513,0.6754473304473305,0.5005494505494505,0.5656988965834542,0.7744804108934543
+6,random_forest_grid_search_data_set1.csv,13,"{'learning_rate': 1, 'n_estimators': 40}",0.9757004830917876,0.9944444444444444,0.9433176691729324,0.9671668946623576,0.9696588345864662
+7,random_forest_grid_search_data_set2.csv,0,"{'learning_rate': 0.01, 'n_estimators': 10}",0.721096096096096,0.6806672494172494,0.4651190476190476,0.5355812456041289,0.6687422360248447
+8,svm_classifier_grid_search_data_set_1.csv,434,"{'C': 2.782559402207126, 'degree': 1, 'gamma': 0.01291549665014884, 'kernel': 'rbf'}",0.9779710144927536,0.9878676470588236,0.9514705882352942,0.9684319103817076,0.9934421182266012
+9,svm_classifier_grid_search_data_set_2.csv,494,"{'C': 16.68100537200059, 'degree': 1, 'gamma': 0.01291549665014884, 'kernel': 'rbf'}",0.7506756756756757,0.7034180035650625,0.5527472527472528,0.6134249224361428,0.7670269947443861
