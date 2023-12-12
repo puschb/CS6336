@@ -8,10 +8,11 @@ import tensorflow_datasets as tfds
 from tensorflow.keras import layers, losses
 from tensorflow.keras.models import Model
 from tensorflow import keras
-from password_data import load_password_data, tvt_split
+from password_data import load_password_data, tvt_split, Autoencoder
 from sklearn.preprocessing import normalize
 from sklearn.metrics import mean_squared_error
 import numpy as np
+from tqdm import tqdm
 
 tf.get_logger().setLevel("FATAL")
 tf.autograph.set_verbosity(1)
@@ -40,10 +41,10 @@ class Hasher(Model):
 
 @keras.saving.register_keras_serializable()
 class Reverser(Model):
-    def __init__(self):
+    def __init__(self, f_len=128, o_len=96):
         super(Reverser, self).__init__()
-        self.shape = (1, 128)
-        self.o_shape = (1, 96)
+        self.shape = (1, f_len)
+        self.o_shape = (1, o_len)
         self.hidden = tf.keras.Sequential(
             [
                 layers.Flatten(),
@@ -63,52 +64,86 @@ def train_models():
     # x_train = builder.as_dataset(split="train[:50%]")
     # x_test = builder.as_dataset(split="train[50%:]")
     pw, h, epw = load_password_data()
+    train_p, val_p, test_p = tvt_split(pw)
     train_h, val_h, test_h = tvt_split(h)
     train_epw, val_epw, test_epw = tvt_split(epw)
     print(train_h)
 
     hasher = Hasher()
     hasher.compile(optimizer="adam", loss=losses.MeanSquaredError())
-    hasher.fit(train_epw, train_h, epochs=2000, shuffle=True)
+    hasher.fit(train_epw, train_h, epochs=10, shuffle=True)
 
     hasher.save("models/hasher.keras")
 
     reverser = Reverser()
     reverser.compile(optimizer="adam", loss=losses.MeanSquaredError())
-    reverser.fit(train_h, train_epw, epochs=2000, shuffle=True)
+    reverser.fit(train_h, train_epw, epochs=10, shuffle=True)
 
     reverser.save("models/reverser.keras")
 
+    naive_reverser = Reverser(128, 192)
+    naive_reverser.compile(optimizer="adam", loss=losses.MeanSquaredError())
+    naive_reverser.fit(train_h, train_p, epochs=10, shuffle=True)
+
+    reverser.save("models/naive_reverser.keras")
+
     hasher.evaluate(val_epw, val_h)
     reverser.evaluate(val_h, val_epw)
+    naive_reverser.evaluate(val_h, val_p)
 
 
 def test_against_random_guessing():
     # set up data
     pw, h, epw = load_password_data()
+    train_p, val_p, test_p = tvt_split(pw)
     train_h, val_h, test_h = tvt_split(h)
     train_epw, val_epw, test_epw = tvt_split(epw)
 
     # generate random outputs
+    random_pw = np.random.randint(2, size=val_p.shape)
     random_hash = np.random.randint(2, size=val_h.shape)
     random_epw = np.random.random_sample(val_epw.shape)
 
     # load models
     hasher = tf.keras.models.load_model("./models/hasher.keras")
     reverser = tf.keras.models.load_model("./models/reverser.keras")
+    naive_reverser = tf.keras.models.load_model("./models/naive_reverser.keras")
 
     # evaluate models
     hasher_loss = hasher.evaluate(val_epw, val_h)
     reverser_loss = reverser.evaluate(val_h, val_epw)
+    # naive_loss = naive_reverser.evaluate(val_h, val_p)
 
     # evaluate random guessing
+    r_pw_loss = mean_squared_error(random_pw, val_p)
     r_hash_loss = mean_squared_error(random_hash, val_h)
     r_epw_loss = mean_squared_error(random_epw, val_epw)
 
     # compare against random outputs
     hasher_score = r_hash_loss - hasher_loss
     reverser_score = r_epw_loss - reverser_loss
+    # naive_reverser_score = r_pw_loss - naive_loss
 
+    ae = tf.keras.models.load_model("./models/autoencoder.keras")
+
+    r_hash_acc = ((random_hash == val_h).flatten()).sum() / len(val_h.flatten())
+    r_pw_acc = ((random_pw == val_p).flatten()).sum() / len(val_p.flatten())
+
+    reverser_epw = reverser.predict(val_h).reshape((val_epw.shape))
+    reverser_pw = []
+    print(reverser_epw)
+    for row in tqdm(reverser_epw):
+        temp = []
+        for i in range(0, len(row), 4):
+            print(row[i : i + 4])
+            temp.append(ae.get_decoded(row[i : i + 4].reshape((1, 4))))
+        temp = temp.flatten()
+        temp = np.round(temp, decimals=0)
+        reverser_pw.append(temp)
+
+    print(reverser_pw)
+
+    # print out comparisons
     print(f"hasher MSE: {hasher_loss}")
     print(f"reverser MSE: {reverser_loss}")
     print(f"random MSE - hasher MSE: {hasher_score}")

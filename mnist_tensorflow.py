@@ -5,9 +5,34 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
 import tensorflow as tf
 from tensorflow.keras import layers
+from tensorflow import keras
+from tensorflow.keras.models import Model
 
 tf.get_logger().setLevel("ERROR")
 tf.autograph.set_verbosity(1)
+
+
+@keras.saving.register_keras_serializable()
+class Convolutional(Model):
+    def __init__(self, activation="sigmoid", layer_count=2, layer_sizes=(32, 64)):
+        super(Convolutional, self).__init__()
+        self.network = keras.Sequential([keras.Input(shape=(28, 28, 1))])
+        for i in range(layer_count):
+            if i != layer_count - 1:
+                self.network.add(
+                    layers.Conv2D(layer_sizes[i], (3, 3), activation=activation)
+                )
+                self.network.add(layers.MaxPooling2D((2, 2)))
+            else:
+                self.network.add(
+                    layers.Conv2D(layer_sizes[i], (3, 3), activation=activation)
+                )
+        self.network.add(layers.Flatten())
+        self.network.add(layers.Dense(10))
+
+    def call(self, x):
+        return self.network(x)
+
 
 if __name__ == "__main__":
     mnist = tf.keras.datasets.mnist
@@ -15,29 +40,17 @@ if __name__ == "__main__":
     (x_train, y_train), (x_test, y_test) = mnist.load_data()
     x_train, x_test = x_train / 255.0, x_test / 255.0
 
-    # create sequential model
-    model = tf.keras.models.Sequential()
-    model.add(tf.keras.Input(shape=(28, 28, 1)))
-
-    # add convolution layers
-    model.add(layers.Conv2D(32, (3, 3), activation="sigmoid"))
-    model.add(layers.MaxPooling2D((2, 2)))
-    model.add(layers.Conv2D(64, (3, 3), activation="sigmoid"))
-
-    # end of pipeline
-    model.add(layers.Flatten())
-
-    # # add rnn layers
-    # model.add(layers.SimpleRNN(128, return_sequences=True, activation="sigmoid"))
-    # model.add(layers.SimpleRNN(256, return_sequences=False, activation="sigmoid"))
-    # # model.add(layers.GRU(128, return_sequences=False, activation="relu"))
-
-    # add dense layer with number of possibilities
-    model.add(tf.keras.layers.Dense(10))
+    model = Convolutional()
 
     loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
     optim = tf.keras.optimizers.Adam(learning_rate=0.001)
-    metrics = ["accuracy"]
+    metrics = [
+        "accuracy",
+        keras.metrics.Precision(top_k=1),
+        # keras.metrics.Recall(),
+        # keras.metrics.F1Score(),
+        # keras.metrics.AUC(),
+    ]
 
     model.compile(loss=loss, optimizer=optim, metrics=metrics)
 
