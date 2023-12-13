@@ -124,24 +124,22 @@ def test_against_random_guessing():
     reverser_score = r_epw_loss - reverser_loss
     # naive_reverser_score = r_pw_loss - naive_loss
 
-    ae = tf.keras.models.load_model("./models/autoencoder.keras")
+    # ae = tf.keras.models.load_model("./models/autoencoder.keras")
 
-    r_hash_acc = ((random_hash == val_h).flatten()).sum() / len(val_h.flatten())
-    r_pw_acc = ((random_pw == val_p).flatten()).sum() / len(val_p.flatten())
+    # r_hash_acc = ((random_hash == val_h).flatten()).sum() / len(val_h.flatten())
+    # r_pw_acc = ((random_pw == val_p).flatten()).sum() / len(val_p.flatten())
+    #
+    # reverser_epw = reverser.predict(val_h).reshape((val_epw.shape))
 
-    reverser_epw = reverser.predict(val_h).reshape((val_epw.shape))
-    reverser_pw = []
-    print(reverser_epw)
-    for row in tqdm(reverser_epw):
-        temp = []
-        for i in range(0, len(row), 4):
-            print(row[i : i + 4])
-            temp.append(ae.get_decoded(row[i : i + 4].reshape((1, 4))))
-        temp = temp.flatten()
-        temp = np.round(temp, decimals=0)
-        reverser_pw.append(temp)
-
-    print(reverser_pw)
+    # TODO: make the output of the reverse hasher human legible
+    # for row in tqdm(reverser_epw):
+    #     temp = []
+    #     for i in range(0, len(row), 4):
+    #         print(row[i : i + 4])
+    #         temp.append(ae.get_decoded(row[i : i + 4].reshape((1, 4))))
+    #     temp = temp.flatten()
+    #     temp = np.round(temp, decimals=0)
+    #     reverser_pw.append(temp)
 
     # print out comparisons
     print(f"hasher MSE: {hasher_loss}")

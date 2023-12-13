@@ -146,4 +146,5 @@ def decipher_results(results_path="./results/"):
 
 
 if __name__ == "__main__":
+    get_bests()
     decipher_results()
