@@ -10,7 +10,7 @@ from PIL import Image
 from torchvision.transforms import ToTensor
 from torch.utils.data import random_split
 import pandas as pd
-import json
+import time
 
 # create net
 
@@ -43,8 +43,8 @@ class ConvNet(nn.Module):
             nn.MaxPool2d(kernel_size=2),
         )
         # fully connected layer, output 10 classes
-        self.out = nn.Sequential(nn.Linear(num_filters[1] * 7 * 7, 10))  # ,
-        # nn.Softmax())
+        self.out = nn.Sequential(nn.Linear(num_filters[1] * 7 * 7, 10))  
+        #cross entropy loss does softmax implicitly
         self.apply(self.init_wieghts)
 
     def init_wieghts(self, w):
@@ -142,7 +142,7 @@ from torcheval.metrics.functional import (
 
 
 # training code
-def train_model(
+def train_model(model_num, 
     hyper_params={
         "EPOCHS": 10,
         "OPTIMIZER": "adam",
@@ -205,6 +205,7 @@ def train_model(
         "v_recall": [],
         "v_f1": [],
         "params": [],
+        "model_num": [],
     }
     for EPOCH in range(hyper_params["EPOCHS"]):
         print(f"EPOCH #{EPOCH}")
@@ -215,35 +216,37 @@ def train_model(
         )
         model.eval()
 
-    with torch.no_grad():
-        val_y_pred = model(val_x)
-        metrics["epoch"].append(EPOCH)
-        metrics["val_loss"].append(loss_fn(val_y_pred, val_y).item() / len(val_y))
-        metrics["train_loss"].append(train_loss.item() / hyper_params["BATCH_SIZE"])
-        metrics["v_accuracy"].append(
-            multiclass_accuracy(val_y_pred, val_y, num_classes=10).item()
-        )
-        metrics["v_f1"].append(
-            multiclass_f1_score(val_y_pred, val_y, num_classes=10).item()
-        )
-        metrics["v_precision"].append(
-            multiclass_precision(val_y_pred, val_y, num_classes=10).item()
-        )
-        metrics["v_recall"].append(
-            multiclass_recall(val_y_pred, val_y, num_classes=10).item()
-        )
-        metrics["params"].append(str(hyper_params))
-        # v_auc = auc(val_y_pred, val_y)
-        # if EPOCH == 10:
-        # print(val_y[50:70])
-        # print(np.array([np.argmax(np.squeeze(t), axis=0) for t in val_y_pred.cpu()])[50:70])
-        print(
-            f'Validation Acc: {metrics["v_accuracy"][-1]} | Loss: {metrics["val_loss"][-1]}'
-        )
-        torch.save(model.state_dict(), model_directory + f"epoch_{EPOCH}.pt")
+        with torch.no_grad():
+            val_y_pred = model(val_x)
+            metrics["epoch"].append(EPOCH)
+            metrics['model_num'].append(model_num)
+            metrics["val_loss"].append(loss_fn(val_y_pred, val_y).item() / len(val_y))
+            metrics["train_loss"].append(train_loss.item() / hyper_params["BATCH_SIZE"])
+            metrics["v_accuracy"].append(
+                multiclass_accuracy(val_y_pred, val_y, num_classes=10).item()
+            )
+            metrics["v_f1"].append(
+                multiclass_f1_score(val_y_pred, val_y, num_classes=10).item()
+            )
+            metrics["v_precision"].append(
+                multiclass_precision(val_y_pred, val_y, num_classes=10).item()
+            )
+            metrics["v_recall"].append(
+                multiclass_recall(val_y_pred, val_y, num_classes=10).item()
+            )
+            metrics["params"].append(str(hyper_params))
+            # v_auc = auc(val_y_pred, val_y)
+            # if EPOCH == 10:
+            # print(val_y[50:70])
+            # print(np.array([np.argmax(np.squeeze(t), axis=0) for t in val_y_pred.cpu()])[50:70])
+            print(
+                f'Validation Acc: {metrics["v_accuracy"][-1]} | Loss: {metrics["val_loss"][-1]}'
+            )
+            print( model_directory + f'model_{model_num}_'+ f"epoch_{EPOCH}.pt" )
+            torch.save(model.state_dict(), model_directory + f'model_{model_num}'+ f"epoch_{EPOCH}.pt" )
 
     print(metrics)
-    df = pd.DataFrame(metrics, index=metrics["epoch"])
+    df = pd.DataFrame(metrics)
     return df
     # df.to_csv("./results/mnist.csv")
     #
@@ -259,12 +262,15 @@ def grid_search(
     }
 ):
     data = pd.DataFrame()
-
+    count = 1
+    
+    print(torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu"))
     for nf in hyper_param_list["NUM_FILTERS"]:
         for bs in hyper_param_list["BATCH_SIZE"]:
             for lr in hyper_param_list["LEARNING_RATE"]:
+                time_1 = time.perf_counter()
                 hyper_params = {
-                    "EPOCHS": 10,
+                    "EPOCHS": 20,
                     "OPTIMIZER": "adam",
                     "NUM_FILTERS": nf,
                     "WEIGHT_INIT": "normal",
@@ -274,12 +280,18 @@ def grid_search(
                 print("Beginning search")
                 print(f"Searching over: {hyper_params}")
 
-                search = train_model(hyper_params=hyper_params)
-                search = search[search["epoch"] == 9]
+                search = train_model(count, hyper_params=hyper_params)
+                #search = search[search["epoch"] == 9]
                 data = pd.concat([data, search])
+                print(count)
+                count +=1
+                print(f'Time taken for model {count}: {time.perf_counter() - time_1}')
+
+                
+
 
     data = data.reset_index()
-    data = data.drop(["index", "epoch"], axis=1)
+    #data = data.drop(["index", "epoch"], axis=1)
     data.to_csv("./results/mnist_search.csv")
     return data
 
